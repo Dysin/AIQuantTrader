@@ -32,6 +32,7 @@ class PathManager:
             "source": self.root_dir / "source",
             "third_party": self.root_dir / "source" / "third_party",
             "files": self.root_dir / "files",
+            "reports": self.root_dir / "reports"
         }
 
         # 自动创建目录
@@ -51,20 +52,24 @@ class PathManager:
     # ---------- 兼容原有接口（可选） ----------
 
     @property
-    def images_dir(self) -> Path:
+    def images(self) -> Path:
         return self._dirs["images"]
 
     @property
-    def data_dir(self) -> Path:
+    def data(self) -> Path:
         return self._dirs["data"]
 
     @property
-    def data_stock_dir(self) -> Path:
+    def data_stock(self) -> Path:
         return self._dirs["data_stock"]
 
     @property
-    def logs_dir(self) -> Path:
+    def logs(self) -> Path:
         return self._dirs["logs"]
+
+    @property
+    def reports(self) -> Path:
+        return self._dirs["reports"]
 
 if __name__ == '__main__':
     path_utils = PathManager()

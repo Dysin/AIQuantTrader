@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 from utils.paths import PathManager
-from utils.image_utils import PlotManager
+from utils.images import ImageUtils
 
 
 class MacroAnalysis:
@@ -24,7 +24,7 @@ class MacroAnalysis:
         """
         self.paths = PathManager()
         self.path_macro = self.paths.get_data_macro_dir()
-        self.plot_manager = PlotManager()
+        self.plot_manager = ImageUtils()
         self.akshare_info = pd.read_csv(
             self.paths.join_file_path('plt_akshare_macro_info.csv')
         )

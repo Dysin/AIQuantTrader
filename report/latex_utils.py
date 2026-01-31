@@ -23,6 +23,7 @@ class LatexUtils:
         self.file_name = file_name
         self.latex_file = os.path.join(path, f'{file_name}.tex')
         self.code = ''
+        self.preamble()
 
     def image_name_to_list(self, image_name):
         # 匹配：变量_轴值  例如 atomization_velocity_z5e-05
@@ -41,55 +42,10 @@ class LatexUtils:
         # 不匹配就原样返回，保证程序安全
         return image_name
 
-    def pair_caption_list(
-            self,
-            image_names,
-            unit="mm",
-            left_tag="（左）",
-            right_tag="（右）",
-            suffix="云图"
-    ):
-        """
-        将类似 [['pressure','y',0.0], ['pressure','y',2.0], ...] 的列表
-        转换为每两个为一组的描述性标题列表
-        参数：
-            data_list: list[list]  输入三元组列表，例如 [['pressure','y',0.0], ...]
-            unit: str              数值单位（默认 'mm'）
-            left_tag: str          左图标签（默认 '(左)'）
-            right_tag: str         右图标签（默认 '(右)'）
-            suffix: str            后缀描述（默认 '云图'）
-
-        返回：
-            list[str]  格式化后的字符串列表
-        """
-        data_list = []
-        for image_name in image_names:
-            data_list.append(self.image_name_to_list(image_name))
-        result = []
-        for i in range(0, len(data_list), 2):
-            if i + 1 < len(data_list):
-                var1, direction1, val1 = data_list[i]
-                var2, direction2, val2 = data_list[i + 1]
-                # 方向相同则使用一次
-                direction = direction1
-                # 生成字符串
-                if unit == 'mm':
-                    val1 = f'{val1 * 1000:.2f}'
-                    val2 = f'{val2 * 1000:.2f}'
-                elif unit == 'cm':
-                    val1 = f'{val1 * 100:.2f}'
-                    val2 = f'{val2 * 100:.2f}'
-                else:
-                    val1 = '{:.5f}'.format(val1)
-                    val2 = '{:.5f}'.format(val2)
-                caption = f"{direction}={val1}{unit}{left_tag}、{direction}={val2}{unit}{right_tag} {var1}{suffix}"
-                result.append(caption)
-        return result
-
     def preamble(self, header=None):
         image_path = os.path.join(self.path, 'images')
         image_path = image_path.replace('\\', '/')
-        code = (
+        self.code += (
             '\\documentclass[12pt]{article}\n'
             '\\usepackage[utf8]{inputenc}\n'
             '\\usepackage{geometry}\n'
@@ -105,18 +61,17 @@ class LatexUtils:
             '\\geometry{a4paper, margin=1in}\n\n'
         )
         if header is not None:
-            code += (
+            self.code += (
                 '\\pagestyle{fancy} %设置页面样式为fancy\n'
                 '\\fancyhf{} %清除所有页眉页脚设置\n'
                 f'\\fancyhead[L]{{{header}}} %中页眉\n'
                 '\\renewcommand{\\headrulewidth}{0.2pt} %页眉下方横线宽度\n\n'
             )
-        code += '\\begin{document}\n\n'
-        code += (
+        self.code += '\\begin{document}\n\n'
+        self.code += (
             '% 图片路径设置（根据实际情况修改）\n'
             f'\\graphicspath{{{{{image_path}/}}}} % 图片存放在images文件夹中\n\n'
         )
-        return code
 
     def insert_figure(
             self,
@@ -125,7 +80,7 @@ class LatexUtils:
             tag,
             image_height=3
     ):
-        code = (
+        self.code += (
             '\\begin{figure}[H]\n'
             '\t\\centering\n'
             f'\t\\includegraphics[height={image_height}cm]{{{name}.png}} %图片文件名\n'
@@ -133,7 +88,6 @@ class LatexUtils:
             f'\t\\label{{fig: {tag}}}\n'
             '\\end{figure}\n\n'
         )
-        return code
 
     def insert_figures_per_row(
             self,
@@ -150,7 +104,6 @@ class LatexUtils:
         :param width: 图片宽度
         :return:
         '''
-        latex_all = ""
         n_rows = len(image_names)
         print(f"[INFO] total rows: {n_rows}")
         print(f"[INFO] main captions num: {len(main_captions)}")
@@ -160,7 +113,7 @@ class LatexUtils:
             row_captions = captions[i] if captions is not None else [None] * m_cols
             main_caption = main_captions[i]
             # 每个 figure 块
-            latex_code = "\\begin{figure}[H]\n    \\centering\n"
+            self.code = "\\begin{figure}[H]\n    \\centering\n"
             lab_imgs = []
             for j, img in enumerate(row_images):
                 if not img:
@@ -171,21 +124,19 @@ class LatexUtils:
                 # - 4行：0.23
                 if width is None:
                     width = min(round(0.9 / m_cols, 2), 0.4)
-                latex_code += f"    \\begin{{subfigure}}[b]{{{width}\\textwidth}}\n"
-                latex_code += f"        \\includegraphics[width=\\textwidth]{{{img}}}\n"
+                self.code += f"    \\begin{{subfigure}}[b]{{{width}\\textwidth}}\n"
+                self.code += f"        \\includegraphics[width=\\textwidth]{{{img}}}\n"
                 if row_captions[j]:
-                    latex_code += f"        \\caption{{{row_captions[j]}}}\n"
-                latex_code += f"        \\label{{fig:{img}}}\n"
-                latex_code += f"    \\end{{subfigure}}\n"
+                    self.code += f"        \\caption{{{row_captions[j]}}}\n"
+                self.code += f"        \\label{{fig:{img}}}\n"
+                self.code += f"    \\end{{subfigure}}\n"
                 if j != m_cols - 1:
-                    latex_code += "    \\hfill\n"
+                    self.code += "    \\hfill\n"
                 lab_imgs.append(img)
             lab_main = f'{lab_imgs[0]}_{lab_imgs[1]}'
             # 主标题
-            latex_code += f"\n    \\caption{{{main_caption}}}\n"
-            latex_code += f"    \\label{{fig:{lab_main}}}\n\\end{{figure}}\n\n"
-            latex_all += latex_code
-        return latex_all
+            self.code += f"\n    \\caption{{{main_caption}}}\n"
+            self.code += f"    \\label{{fig:{lab_main}}}\n\\end{{figure}}\n\n"
 
     def insert_table(
             self,
@@ -203,53 +154,53 @@ class LatexUtils:
         label -- 表格引用标签（可选）
         alignment -- 列对齐方式字符串，如 "lcr"（可选，默认为所有列居中）
         position -- 表格位置参数，如 "htbp"（可选）
-        返回:
-        LaTeX 表格代码字符串
         """
-        # 确定列数和行数
+
+        # 确定列数
         n_cols = len(data[0])
-        n_rows = len(data)
-        # 设置默认对齐方式（所有列居中）
-        if alignment is None:
+
+        # 设置默认对齐方式
+        if alignment is None or len(alignment) != n_cols:
             alignment = "c" * n_cols
-        elif len(alignment) != n_cols:
-            alignment = "c" * n_cols  # 如果提供的对齐方式不匹配列数，使用默认值
-        # 开始构建表格代码
-        code = []
-        # 添加表格浮动环境
-        code.append(r"\begin{table}[" + position + "]")
-        code.append(r"\centering")
-        # 添加标题和标签
+
+        # 确保 self.code 已初始化
+        if not hasattr(self, "code") or self.code is None:
+            self.code = ""
+
+        # 表格环境开始
+        self.code += f"\\begin{{table}}[{position}]\n"
+        self.code += "\\centering\n"
+
         if caption:
-            code.append(r"\caption{" + caption + "}")
+            self.code += f"\\caption{{{caption}}}\n"
         if label:
-            code.append(r"\label{" + label + "}")
-        # 开始表格环境
-        code.append(r"\begin{tabular}{" + alignment + "}")
-        code.append(r"\toprule")  # 顶部线
-        # 添加表头（第一行）
-        header = " & ".join(str(cell) for cell in data[0]) + r" \\"
-        code.append(header)
-        code.append(r"\midrule")  # 中间线
-        # 添加数据行
+            self.code += f"\\label{{{label}}}\n"
+
+        # tabular 环境
+        self.code += f"\\begin{{tabular}}{{{alignment}}}\n"
+        self.code += "\\toprule\n"
+
+        # 表头
+        header = " & ".join(str(cell) for cell in data[0])
+        self.code += header + " \\\\\n"
+        self.code += "\\midrule\n"
+
+        # 数据行
         for row in data[1:]:
-            row_str = " & ".join(str(cell) for cell in row) + r" \\"
-            code.append(row_str)
-        # 结束表格
-        code.append(r"\bottomrule")  # 底部线
-        code.append(r"\end{tabular}")
-        code.append("\\end{table}\n\n")
-        # 添加必要的包引用
-        code.insert(0, r"% 请确保在文档开头添加以下包：")
-        code.insert(1, r"% \usepackage{booktabs}")
-        return "\n".join(code)
+            row_str = " & ".join(str(cell) for cell in row)
+            self.code += row_str + " \\\\\n"
+
+        # 表格结束
+        self.code += "\\bottomrule\n"
+        self.code += "\\end{tabular}\n"
+        self.code += "\\end{table}\n\n"
 
     def first_page(
             self,
             main_title,
             sub_title
     ):
-        code = (
+        self.code += (
             '\\begin{center}\n'
             '\t\\vspace*{3cm} % 顶部垂直间距调整\n\n'
             # '\t\\begin{figure}[H]\n'
@@ -275,24 +226,20 @@ class LatexUtils:
             '\\newpage\n\n'
             '\\setcounter{page}{1} % 重置页码为1\n\n'
         )
-        return code
 
     def end(self):
-        code = (
+        self.code += (
             '\n\\end{document}\n'
         )
-        return code
 
-    def save_to_file(
-            self,
-            latex_code
-    ):
+    def save_to_file(self):
         """
         将生成的 LaTeX 文档保存为 `.tex` 文件。
         :param filename: 文件名，默认是 `report.tex`
         """
+        self.end()
         with open(self.latex_file, "w", encoding="utf-8") as f:
-            f.write(latex_code)
+            f.write(self.code)
         logger.info(f"Latex file saved as {self.latex_file}")
 
     def compile_pdf(self, output_path=None, pdflatex_path=None):
@@ -351,3 +298,8 @@ class LatexUtils:
         except subprocess.CalledProcessError as e:
             logger.error(f"PDF compilation failed with error code: {e.returncode}")
             return False
+
+    def save_and_compile(self):
+        self.save_to_file()
+        self.compile_pdf()
+        self.compile_pdf()

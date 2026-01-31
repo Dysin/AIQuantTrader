@@ -6,20 +6,16 @@
 
 import os
 from report.latex_utils import LatexUtils
-from utils.params_manager import PathManager
-from utils.files_utils import FileUtils
-from utils.images_utils import ImageUtils
+from utils.paths import PathManager
+from utils.files import FileUtils
 from utils.logger import get_logger
 logger = get_logger(__name__)
 
 class ReportBase(object):
     def __init__(
             self,
-            path_root,
             report_dirname: str,
             report_filename: str,
-            model_number: str,
-            version_number: str,
     ):
         '''
         报告输出基类
@@ -29,12 +25,12 @@ class ReportBase(object):
         :param model_number: 项目型号
         :param version_number: 项目版本号
         '''
-        self.pm = PathManager(path_root, False)
+        self.pm = PathManager()
         self.report_dirname = report_dirname
         self.report_filename = report_filename
 
         self.path_latex = os.path.join(
-            self.pm.path_reports,
+            self.pm.reports,
             self.report_dirname,
         )
         self.path_latex_images = os.path.join(self.path_latex, 'images')
@@ -43,36 +39,10 @@ class ReportBase(object):
             self.path_latex_images
         )
 
-        self.model_number = model_number
-        self.proj_name = model_number.replace('-', '')
-        self.version_number = version_number
-
         self.latex = LatexUtils(
             path=self.path_latex,
             file_name=self.report_filename
         )
-
-    def convert_images(self):
-        '''
-        BMP图片转换为PNG，并从计算算例路径复制到报告images路径
-        :return:
-        '''
-        path_simulation = os.path.join(
-            self.pm.path_simulation,
-            self.report_dirname
-        )
-        files_images = FileUtils(path_simulation)
-        image_manager = ImageUtils()
-        image_names = files_images.get_file_names_by_type('.bmp')
-        logger.info(f'Starting image conversion and copying')
-        for image_name in image_names:
-            image_manager.bmp_to_png(
-                path_simulation,
-                self.path_latex_images,
-                image_name,
-                add_border=True
-            )
-        logger.info(f'Finished | {self.path_latex_images}')
 
     def embed_single_figure(
             self,
