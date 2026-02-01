@@ -160,7 +160,7 @@ class BacktestEngine:
         :return:
         '''
         for time, row in data.iterrows():
-            price = row['Close']
+            price = row['close']
 
             # 1.策略生成信号（只用当前及过去数据）
             signal = strategy.generate_signal(row)

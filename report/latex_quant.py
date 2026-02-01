@@ -21,7 +21,7 @@ class LatexQuant(ReportBase):
     def analysis(self):
         self.latex.first_page(
             main_title=self.title,
-            sub_title='Neural Network'
+            sub_title='股票'
         )
         self.latex.save_and_compile()
 
