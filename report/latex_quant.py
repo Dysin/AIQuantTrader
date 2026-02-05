@@ -23,6 +23,23 @@ class LatexQuant(ReportBase):
             main_title=self.title,
             sub_title='股票'
         )
+        self.latex.code += (
+            '投资收益表如下：\n'
+        )
+        table_fin = [
+            ['','值'],
+            ['初始交易时间', ''],
+            ['初始资金',''],
+            ['总收益率', ''],
+            ['交易次数','']
+        ]
+        self.latex.code += self.latex.insert_table(
+            data=table_fin,
+            caption='投资收益表',
+            label='fin',
+            alignment='cc',
+            position='H'
+        )
         self.latex.save_and_compile()
 
 if __name__ == '__main__':

@@ -13,6 +13,8 @@ from backtest.engine import BacktestEngine
 from backtest.portfolio import Portfolio
 from backtest.metrics import PerformanceMetrics
 from strategy.simple_ma import SimpleMAStrategy
+from utils.images import ImageUtils
+from utils.files import CSVUtils
 
 logger = get_logger(__name__)
 
@@ -24,7 +26,7 @@ def workflow():
         'us_stock_daily_AAPL.csv'
     )
     df = pd.read_csv(csv_stock, parse_dates=["date"], index_col="date")
-    df_slice = df.loc["2025-01-01":"2025-10-30"]
+    df_slice = df.loc["2024-01-01":"2025-10-30"]
 
     data = pd.DataFrame({
         "Close": [100, 101, 102, 101, 103, 104, 102]
@@ -37,6 +39,38 @@ def workflow():
     )
     strategy = SimpleMAStrategy(window=20)
     result = engine.run(df_slice, strategy)
+    engine.export_trades_to_csv()
+
+    path_data = os.path.join(
+        pm.results,
+        'backtest',
+        'data'
+    )
+    image_names = [
+        'trades_price',
+        'trades_volume',
+        'trades_direction',
+        'trades_fee'
+    ]
+    csv_utils = CSVUtils(
+        path_data,
+        'trades'
+    )
+    df_trades = csv_utils.read()
+    image_utils = ImageUtils()
+    for i in range(len(image_names)):
+        path_images = os.path.join(
+            pm.results,
+            'backtest',
+            'images',
+            image_names[i]
+        )
+        image_utils.plot_lines(
+            df=df_trades,
+            y_columns=i+1,
+            save_path=path_images,
+            bool_datetime=True
+        )
 
     # 基础结果
     print("初始资金:", result["init_cash"])

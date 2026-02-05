@@ -32,7 +32,8 @@ class PathManager:
             "source": self.root_dir / "source",
             "third_party": self.root_dir / "source" / "third_party",
             "files": self.root_dir / "files",
-            "reports": self.root_dir / "reports"
+            "reports": self.root_dir / "reports",
+            "results": self.root_dir / "results"
         }
 
         # 自动创建目录
@@ -70,6 +71,10 @@ class PathManager:
     @property
     def reports(self) -> Path:
         return self._dirs["reports"]
+
+    @property
+    def results(self) -> Path:
+        return self._dirs["results"]
 
 if __name__ == '__main__':
     path_utils = PathManager()

@@ -49,7 +49,7 @@ class ImageUtils:
             "xtick.labelsize": 12,         # X 轴刻度
             "ytick.labelsize": 12,         # Y 轴刻度
             "legend.fontsize": 12,         # 图例大小
-            "lines.linewidth": 1,          # 曲线宽度
+            "lines.linewidth": 2,          # 曲线宽度
             "grid.alpha": 0.3,             # 网格透明度
             "axes.grid": True,             # 默认显示网格
             "savefig.bbox": "tight",       # 保存时裁剪空白

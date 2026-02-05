@@ -13,9 +13,14 @@
 @Author: Dysin
 @Date:   2026/1/29
 '''
+import os.path
 
+import pandas as pd
 from dataclasses import dataclass
 from typing import List, Dict, Any
+from utils.paths import PathManager
+from utils.logger import get_logger
+logger = get_logger(__name__)
 
 @dataclass
 class Trade:
@@ -72,6 +77,13 @@ class BacktestEngine:
         # 回测记录
         self.trades: List[Trade] = []  # 所有交易记录
         self.equity_curve: List[float] = []  # 资产净值曲线
+
+        self.pm = PathManager()
+        self.path_data = os.path.join(
+            self.pm.results,
+            'backtest',
+            'data'
+        )
 
     def _apply_slippage(self, price: float, direction: int) -> float:
         '''
@@ -188,3 +200,28 @@ class BacktestEngine:
             'equity_curve': self.equity_curve,
             'trades': self.trades,
         }
+
+    def export_trades_to_csv(self):
+        """
+        将交易记录 self.trades 导出为 CSV 文件
+        :return: None
+        """
+
+        path_csv = os.path.join(
+            self.path_data,
+            'trades.csv'
+        )
+
+        if not self.trades:
+            print("No trades to export.")
+            return
+
+        df = pd.DataFrame([{
+            "time": t.time,
+            "price": float(t.price),
+            "volume": float(t.volume),
+            "direction": t.direction,
+            "fee": float(t.fee)
+        } for t in self.trades])
+
+        df.to_csv(path_csv, index=False)
