@@ -4,7 +4,7 @@
 @Date:   2025/10/5
 '''
 
-class APIKey:
+class APIKeys:
     '''
     美国 FRED
     网址：https://fred.stlouisfed.org/
@@ -32,6 +32,16 @@ class APIKey:
         - 它从多个公开数据源（政府网站、交易所、券商、基金网站等）自动抓取数据并封装成pandas DataFrame格式
     网址：https://akshare.akfamily.xyz/index.html
     '''
+
+    '''
+    Alpaca 是一个专为算法交易和开发者设计的现代经纪商平台。
+    它最大的特点是 API-First，就是说，
+    它的所有操作（行情获取、下单、资产管理）都是通过代码完成的。
+    通过身份验证器的紧急代码：
+    40e94131-a263-494e-9fd6-125a9b73ca8c
+    '''
+    alpaca_key = 'PK3L5CG6JYMYFZOJ5KWQPZNXU4'
+    alpaca_secret = '3SNhMoVubh8yvJaJK4cJc52j8DbmYty2S8Reooc3XCZf'
 
 
 # ---------- 数据库配置 ----------

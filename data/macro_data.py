@@ -72,7 +72,7 @@ class MacroDataFetcher:
         self._ensure_dir(self.cn_dir)
 
         # 初始化 Tushare
-        ts.set_token(APIKey().tushare)
+        ts.set_token(APIKeys().tushare)
         self.pro = ts.pro_api()
 
         # 初始化数据管理器
@@ -100,7 +100,7 @@ class MacroDataFetcher:
         df = None
 
         try:
-            fred = Fred(api_key=APIKey().fred)
+            fred = Fred(api_key=APIKeys().fred)
             print(f"[Info] 从 FRED 获取美国数据：{series_name}")
             data = fred.get_series(series_name)
             print(data)

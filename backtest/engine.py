@@ -74,9 +74,13 @@ class BacktestEngine:
         self.fee_rate = fee_rate  # 手续费
         self.slippage = slippage  # 滑点
 
-        # 回测记录
-        self.trades: List[Trade] = []  # 所有交易记录
-        self.equity_curve: List[float] = []  # 资产净值曲线
+        # 交易与资金记录（回测中用 list）
+        self.trades: List[Trade] = []
+        self._equity_list: List[float] = []
+        self._equity_dates: List = []
+
+        # 回测结束后生成
+        self.equity_curve: pd.Series | None = None
 
         self.pm = PathManager()
         self.path_data = os.path.join(
@@ -84,6 +88,7 @@ class BacktestEngine:
             'backtest',
             'data'
         )
+        os.makedirs(self.path_data, exist_ok=True)
 
     def _apply_slippage(self, price: float, direction: int) -> float:
         '''
@@ -154,7 +159,7 @@ class BacktestEngine:
                 Trade(time, exec_price, 0, -1, fee)
             )
 
-    def update_equity(self, price: float):
+    def update_equity(self, time, price: float):
         '''
         计算当前总资产
             总资产 = 现金 + 持仓市值
@@ -162,7 +167,8 @@ class BacktestEngine:
         :return:
         '''
         equity = self.cash + self.position * price
-        self.equity_curve.append(equity)
+        self._equity_list.append(equity)
+        self._equity_dates.append(time)
 
     def run(self, data, strategy):
         '''
@@ -173,15 +179,20 @@ class BacktestEngine:
         '''
         for time, row in data.iterrows():
             price = row['close']
-
             # 1.策略生成信号（只用当前及过去数据）
             signal = strategy.generate_signal(row)
-
             # 2.执行交易
             self.execute_trade(time, price, signal)
-
             # 3.更新资产
-            self.update_equity(price)
+            self.update_equity(time, price)
+
+        # 回测结束，生成 Series
+        self.equity_curve = pd.Series(
+            self._equity_list,
+            index=self._equity_dates
+        )
+        self.export_trades()
+        self.export_equity()
 
         return self._summary()
 
@@ -190,18 +201,19 @@ class BacktestEngine:
         汇总回测结果
         :return:
         '''
-        total_return = self.equity_curve[-1] / self.init_cash - 1
+        final_equity = self.equity_curve.iloc[-1]
+        total_return = final_equity / self.init_cash - 1
 
         return {
             'init_cash': self.init_cash,
-            'final_equity': self.equity_curve[-1],
+            'final_equity': final_equity,
             'total_return': total_return,
             'trade_count': len(self.trades),
             'equity_curve': self.equity_curve,
             'trades': self.trades,
         }
 
-    def export_trades_to_csv(self):
+    def export_trades(self):
         """
         将交易记录 self.trades 导出为 CSV 文件
         :return: None
@@ -223,5 +235,25 @@ class BacktestEngine:
             "direction": t.direction,
             "fee": float(t.fee)
         } for t in self.trades])
+
+        df.to_csv(path_csv, index=False)
+
+    def export_equity(self):
+        '''
+        导出资金数据
+        :return:
+        '''
+        path_csv = os.path.join(
+            self.path_data,
+            'equity.csv'
+        )
+        if (
+                self.equity_curve is None or
+                len(self.equity_curve) == 0
+        ):
+            return
+
+        df = self.equity_curve.reset_index()
+        df.columns = ["date", "equity"]
 
         df.to_csv(path_csv, index=False)

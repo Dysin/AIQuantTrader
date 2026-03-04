@@ -14,7 +14,6 @@ from backtest.portfolio import Portfolio
 from backtest.metrics import PerformanceMetrics
 from strategy.simple_ma import SimpleMAStrategy
 from utils.images import ImageUtils
-from utils.files import CSVUtils
 
 logger = get_logger(__name__)
 
@@ -26,7 +25,7 @@ def workflow():
         'us_stock_daily_AAPL.csv'
     )
     df = pd.read_csv(csv_stock, parse_dates=["date"], index_col="date")
-    df_slice = df.loc["2024-01-01":"2025-10-30"]
+    df_slice = df.loc["2022-01-01":"2025-10-30"]
 
     data = pd.DataFrame({
         "Close": [100, 101, 102, 101, 103, 104, 102]
@@ -37,9 +36,8 @@ def workflow():
         fee_rate=0.001,
         slippage=0.0005,
     )
-    strategy = SimpleMAStrategy(window=20)
+    strategy = SimpleMAStrategy(window=10)
     result = engine.run(df_slice, strategy)
-    engine.export_trades_to_csv()
 
     path_data = os.path.join(
         pm.results,
@@ -52,25 +50,34 @@ def workflow():
         'trades_direction',
         'trades_fee'
     ]
-    csv_utils = CSVUtils(
-        path_data,
-        'trades'
-    )
-    df_trades = csv_utils.read()
-    image_utils = ImageUtils()
-    for i in range(len(image_names)):
-        path_images = os.path.join(
+    df_trades = pd.read_csv(os.path.join(path_data, 'trades.csv'))
+    df_equity = pd.read_csv(os.path.join(path_data, 'equity.csv'))
+    path_images = os.path.join(
             pm.results,
             'backtest',
-            'images',
+            'images'
+    )
+    for i in range(len(image_names)):
+        image_trade = os.path.join(
+            path_images,
             image_names[i]
         )
-        image_utils.plot_lines(
+        ImageUtils().plot_lines(
             df=df_trades,
             y_columns=i+1,
-            save_path=path_images,
+            save_path=image_trade,
             bool_datetime=True
         )
+    image_equity = os.path.join(
+        path_images,
+        'equity'
+    )
+    ImageUtils().plot_lines(
+        df=df_equity,
+        y_columns=1,
+        save_path=image_equity,
+        bool_datetime=True
+    )
 
     # 基础结果
     print("初始资金:", result["init_cash"])
@@ -104,7 +111,8 @@ if __name__ == '__main__':
     path_manager = PathManager()
     path_stock = path_manager.data_stock
     csv_stock = os.path.join(path_stock, 'us_stock_daily_AAPL.csv')
-    df = pd.read_csv(csv_stock, parse_dates=["date"], index_col="date")
+    df = pd.read_csv(csv_stock, index_col="date")
+    print(df)
     calc = StockTradeCalculator(
         df,
         fee_buy=0.0003,
@@ -113,8 +121,8 @@ if __name__ == '__main__':
         annual_interest_rate=0.03
     )
     result = calc.calculate_trade(
-        buy_time=pd.Timestamp("2013-10-01"),
-        sell_time=pd.Timestamp("2014-08-01"),
+        buy_time=pd.Timestamp("2015-12-10"),
+        sell_time=pd.Timestamp("2016-08-01"),
         shares=1000
     )
     for k, v in result.items():
