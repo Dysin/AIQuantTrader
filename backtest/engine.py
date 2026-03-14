@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any
 from utils.paths import PathManager
 from utils.logger import get_logger
+from utils.images import ImageUtils
 logger = get_logger(__name__)
 
 @dataclass
@@ -82,13 +83,14 @@ class BacktestEngine:
         # 回测结束后生成
         self.equity_curve: pd.Series | None = None
 
+        self.cumulative_return_curve: pd.Series | None = None
+
         self.pm = PathManager()
-        self.path_data = os.path.join(
+        self.path_backtest = os.path.join(
             self.pm.results,
-            'backtest',
-            'data'
+            'backtest'
         )
-        os.makedirs(self.path_data, exist_ok=True)
+        os.makedirs(self.path_backtest, exist_ok=True)
 
     def _apply_slippage(self, price: float, direction: int) -> float:
         '''
@@ -191,8 +193,13 @@ class BacktestEngine:
             self._equity_list,
             index=self._equity_dates
         )
+
+        # 累计收益率曲线
+        self.cumulative_return_curve = self.equity_curve - self.init_cash
+
         self.export_trades()
         self.export_equity()
+        self.export_cumulative_return()
 
         return self._summary()
 
@@ -204,13 +211,16 @@ class BacktestEngine:
         final_equity = self.equity_curve.iloc[-1]
         total_return = final_equity / self.init_cash - 1
 
+
         return {
-            'init_cash': self.init_cash,
-            'final_equity': final_equity,
-            'total_return': total_return,
-            'trade_count': len(self.trades),
-            'equity_curve': self.equity_curve,
-            'trades': self.trades,
+            'init_cash': self.init_cash, # 初始资金
+            'final_equity': final_equity, # 最终收益
+            'cumulative_return': final_equity - self.init_cash, # 累计收益
+            'cumulative_return_curve': self.cumulative_return_curve,  # 累计收益率曲线
+            'total_return': total_return, # 总收益率
+            'trade_count': len(self.trades), # 交易次数
+            'equity_curve': self.equity_curve, # 资金曲线
+            'trades': self.trades, # 交易记录
         }
 
     def export_trades(self):
@@ -220,7 +230,7 @@ class BacktestEngine:
         """
 
         path_csv = os.path.join(
-            self.path_data,
+            self.path_backtest,
             'trades.csv'
         )
 
@@ -243,17 +253,43 @@ class BacktestEngine:
         导出资金数据
         :return:
         '''
-        path_csv = os.path.join(
-            self.path_data,
-            'equity.csv'
+        path = os.path.join(
+            self.path_backtest,
+            'equity'
         )
         if (
-                self.equity_curve is None or
-                len(self.equity_curve) == 0
+            self.equity_curve is None or
+            len(self.equity_curve) == 0
         ):
             return
 
         df = self.equity_curve.reset_index()
-        df.columns = ["date", "equity"]
+        df.columns = ["date", "value"]
+        df.to_csv(f'{path}.csv', index=False)
 
-        df.to_csv(path_csv, index=False)
+        ImageUtils().plot_lines(
+            df=df,
+            y_columns=1,
+            save_path=path,
+            bool_datetime=True
+        )
+
+    def export_cumulative_return(self):
+        '''
+        导出累计收益数据
+        :return:
+        '''
+        path = os.path.join(
+            self.path_backtest,
+            'cumulative_return'
+        )
+        df = self.cumulative_return_curve.reset_index()
+        df.columns = ["date", "value"]
+        df.to_csv(f'{path}.csv', index=False)
+
+        ImageUtils().plot_lines(
+            df=df,
+            y_columns=1,
+            save_path=path,
+            bool_datetime=True
+        )

@@ -1,4 +1,4 @@
-'''
+"""
 @Desc:   宏观经济数据采集与分析模块
 @Author: Dysin
 @Date:   2025/10/5
@@ -16,7 +16,7 @@
     - FRED：https://fred.stlouisfed.org/
 
 本地MySQL路径：C:\ProgramData\MySQL\MySQL Server 8.0\Data\financial_data
-'''
+"""
 
 import os
 import pandas as pd
@@ -64,17 +64,10 @@ class MacroDataFetcher:
 
     def __init__(self):
         # 获取数据保存路径
-        paths = PathManager()
-        self.base_dir = paths.get_data_dir()
-        self.us_dir = os.path.join(self.base_dir, "us")
-        self.cn_dir = os.path.join(self.base_dir, "cn")
-        self._ensure_dir(self.us_dir)
-        self._ensure_dir(self.cn_dir)
-
+        self.pm = PathManager()
         # 初始化 Tushare
         ts.set_token(APIKeys().tushare)
         self.pro = ts.pro_api()
-
         # 初始化数据管理器
         self.db = DBManager()
 
@@ -88,7 +81,7 @@ class MacroDataFetcher:
         df.reset_index(inplace=True)
         df.columns = ["date", "value"]
         df.to_csv(path, index=False)
-        self.db.save_dataframe(df, table_name)
+        # self.db.save_dataframe(df, table_name)
         print(f"[Info] 数据已保存: {path}")
 
     # ==================== 美国宏观数据 ====================
@@ -96,7 +89,11 @@ class MacroDataFetcher:
         """
         获取美国宏观数据并保存
         """
-        file_path = os.path.join(self.us_dir, f"{series_name}.csv")
+        file_path = os.path.join(
+            self.pm.data_active,
+            "macro",
+            f"us_{series_name.lower()}.csv"
+        )
         df = None
 
         try:
@@ -104,11 +101,11 @@ class MacroDataFetcher:
             print(f"[Info] 从 FRED 获取美国数据：{series_name}")
             data = fred.get_series(series_name)
             print(data)
-            df = pd.DataFrame(data, columns=['value'])
+            df = pd.DataFrame(data, columns=["value"])
         except Exception as e:
             print(f"[Warning] FRED 获取失败：{e}")
 
-        self._save_data(df, file_path, table_name=f'US_{series_name}')
+        self._save_data(df, file_path, table_name=f"US_{series_name}")
 
     # ==================== 中国宏观数据 ====================
     def fetch_cn_data(self, series_name: str):
@@ -116,36 +113,40 @@ class MacroDataFetcher:
         获取中国宏观数据并保存
         优先 Tushare，失败则 Yahoo Finance 替代
         """
-        file_path = os.path.join(self.cn_dir, f"{series_name}.csv")
+        file_path = os.path.join(
+            self.pm.data_active,
+            "macro",
+            f"cn_{series_name}.csv"
+        )
         df = None
 
-        # 1️⃣ 优先使用 Tushare
+        # 优先使用 Tushare
         try:
             print(f"[Info] 从 Tushare 获取中国数据：{series_name}")
             if series_name == "GDP":
-                df = self.pro.cn_gdp(year='', fields='year,gdp')  # 年度 GDP
-                df.rename(columns={'gdp': 'value', 'year': 'date'}, inplace=True)
-                df['date'] = pd.to_datetime(df['date'].astype(str))
-                df.set_index('date', inplace=True)
+                df = self.pro.cn_gdp(year="", fields="year,gdp")  # 年度 GDP
+                df.rename(columns={"gdp": "value", "year": "date"}, inplace=True)
+                df["date"] = pd.to_datetime(df["date"].astype(str))
+                df.set_index("date", inplace=True)
             elif series_name == "CPI":
-                df = self.pro.cn_cpi(start_date='20100101')      # 月度 CPI
-                df.rename(columns={'cpi': 'value', 'date': 'date'}, inplace=True)
-                df['date'] = pd.to_datetime(df['date'])
-                df.set_index('date', inplace=True)
+                df = self.pro.cn_cpi(start_date="20100101")      # 月度 CPI
+                df.rename(columns={"cpi": "value", "date": "date"}, inplace=True)
+                df["date"] = pd.to_datetime(df["date"])
+                df.set_index("date", inplace=True)
             elif series_name == "M2":
-                df = self.pro.cn_m2(start_date='20100101')       # 月度 M2
-                df.rename(columns={'m2': 'value', 'date': 'date'}, inplace=True)
-                df['date'] = pd.to_datetime(df['date'])
-                df.set_index('date', inplace=True)
+                df = self.pro.cn_m2(start_date="20100101")       # 月度 M2
+                df.rename(columns={"m2": "value", "date": "date"}, inplace=True)
+                df["date"] = pd.to_datetime(df["date"])
+                df.set_index("date", inplace=True)
             elif series_name == "PMI":
-                df = self.pro.cn_pmi(start_date='20100101')      # 月度 PMI
-                df.rename(columns={'pmi': 'value', 'date': 'date'}, inplace=True)
-                df['date'] = pd.to_datetime(df['date'])
-                df.set_index('date', inplace=True)
+                df = self.pro.cn_pmi(start_date="20100101")      # 月度 PMI
+                df.rename(columns={"pmi": "value", "date": "date"}, inplace=True)
+                df["date"] = pd.to_datetime(df["date"])
+                df.set_index("date", inplace=True)
         except Exception as e:
             print(f"[Warning] Tushare 获取失败：{e}")
 
-        self._save_data(df, file_path, table_name=f'US_{series_name}')
+        self._save_data(df, file_path, table_name=f"US_{series_name}")
 
 
 # ===============================
@@ -156,24 +157,24 @@ if __name__ == "__main__":
 
     # 获取美国宏观指标
     us_series = [
-        # "GDP",
-        # "CPIAUCSL",
-        "FEDFUNDS",
+        "GDP",
+        "CPIAUCSL",
+        # "FEDFUNDS",
         # "UNRATE",
-        # "SP500"
+        "SP500"
     ]
     for s in us_series:
         fetcher.fetch_us_data(s)
 
     # 获取中国宏观指标
-    cn_series = [
-        "GDP",
-        "CPI",
-        "M2",
-        "PMI",
-        "上证指数",
-        "深证成指",
-        "人民币汇率"
-    ]
-    for s in cn_series:
-        fetcher.fetch_cn_data(s)
+    # cn_series = [
+    #     "GDP",
+    #     "CPI",
+    #     "M2",
+    #     "PMI",
+    #     "上证指数",
+    #     "深证成指",
+    #     "人民币汇率"
+    # ]
+    # for s in cn_series:
+    #     fetcher.fetch_cn_data(s)

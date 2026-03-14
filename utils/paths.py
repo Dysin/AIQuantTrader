@@ -26,8 +26,8 @@ class PathManager:
         self._dirs = {
             "images": self.root_dir / "images",
             "data": self.root_dir / "data",
-            "data_macro": self.root_dir / "data" / "macro",
-            "data_stock": self.root_dir / "data" / "stock",
+            "data_active": self.root_dir / "data" / "active",
+            "data_archived": self.root_dir / "data" / "archived",
             "logs": self.root_dir / "logs",
             "source": self.root_dir / "source",
             "third_party": self.root_dir / "source" / "third_party",
@@ -57,12 +57,20 @@ class PathManager:
         return self._dirs["images"]
 
     @property
+    def files(self) -> Path:
+        return self._dirs["files"]
+
+    @property
     def data(self) -> Path:
         return self._dirs["data"]
 
     @property
-    def data_stock(self) -> Path:
-        return self._dirs["data_stock"]
+    def data_active(self) -> Path:
+        return self._dirs["data_active"]
+
+    @property
+    def data_archived(self) -> Path:
+        return self._dirs["data_archived"]
 
     @property
     def logs(self) -> Path:

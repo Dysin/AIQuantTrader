@@ -23,10 +23,13 @@ class MacroAnalysis:
         初始化分析类
         """
         self.paths = PathManager()
-        self.path_macro = self.paths.get_data_macro_dir()
+        self.path_macro = self.paths.data_macro
         self.plot_manager = ImageUtils()
         self.akshare_info = pd.read_csv(
-            self.paths.join_file_path('plt_akshare_macro_info.csv')
+            self.paths.join(
+                'files',
+                'plt_akshare_macro_info.csv'
+            )
         )
 
     def split_df_by_column(self, df, col_index):
@@ -41,10 +44,13 @@ class MacroAnalysis:
         return {k: v for k, v in df.groupby(col_name)}
 
     def plot_data(self, folder_name, star_index=1):
-        path_data = os.path.join(self.paths.get_data_dir(), f'{folder_name}')
-        path_save = os.path.join(self.paths.get_images_dir(), f'{folder_name}')
+        path_data = os.path.join(self.paths.data, f'{folder_name}')
+        path_save = os.path.join(self.paths.images, f'{folder_name}')
         os.makedirs(path_save, exist_ok=True)
-        plt_csv_name = self.paths.join_file_path(f'plt_akshare_{folder_name}_info.csv')
+        plt_csv_name = self.paths.join(
+            'files',
+            f'plt_akshare_{folder_name}_info.csv'
+        )
         akshare_info = pd.read_csv(plt_csv_name)
         for i in range(star_index-1, len(akshare_info)):
             row = akshare_info.iloc[i]
@@ -106,7 +112,7 @@ class MacroAnalysis:
 # ===============================
 if __name__ == "__main__":
     analysis = MacroAnalysis()
-    # analysis.plot_data('macro', star_index=3)
-    analysis.plot_data('stock', star_index=2)
+    analysis.plot_data('macro', star_index=71)
+    # analysis.plot_data('stock', star_index=2)
 
 

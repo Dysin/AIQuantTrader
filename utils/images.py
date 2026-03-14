@@ -308,22 +308,95 @@ class ImageUtils:
         plt.savefig(save_path, dpi=300)
         print(f"[INFO] 折线图已保存: {save_path}")
 
-    def plot_bars(
+    def plot_multiple_dfs(
         self,
-        df: pd.DataFrame,
-        y_columns: Union[str, List[str], int, List[int]],
-        x_column: Union[str, int] = 0,
+        dfs: List[pd.DataFrame],
+        y_columns_list: List[Union[str, List[str], int, List[int]]],
+        x_columns: Union[str, int, List[Union[str, int]]] = 0,
         x_label: str = "X",
         y_label: str = "Y",
-        bar_labels: Union[str, List[str]] = None,
-        title: str = "Bar Chart",
-        save_path: str = "bar_plot.png",
-        style: Optional[dict] = None,
-        rotate_xticks: Optional[Union[int, float]] = None,
-        annotate: bool = False,
-        number_format: str = "float",
-        precision: int = 2,
-        figure_size: [int, int] = None
+        line_labels_list: List[Union[str, List[str]]] = None,
+        title: str = "Multiple Line Plot",
+        show_markers: bool = False,
+        save_path: str = "multi_line_plot.png",
+        bool_datetime: Union[bool, List[bool]] = False,
+        axis_ticks = (10, 12)
+    ):
+        """
+        绘制 N 条曲线，每条曲线来自不同 DataFrame
+        完全兼容 datetime 类型横坐标
+        """
+        fig, ax = plt.subplots(figsize=(16, 9))
+
+        n = len(dfs)
+        if isinstance(bool_datetime, bool): bool_datetime = [bool_datetime] * n
+        if isinstance(x_columns, (int, str)): x_columns = [x_columns] * n
+        if line_labels_list is None: line_labels_list = [None] * n
+
+        all_x_min, all_x_max = [], []
+
+        for i, (df, y_cols, x_col, lbls, dt_flag) in enumerate(
+                zip(dfs, y_columns_list, x_columns, line_labels_list, bool_datetime)):
+            # 2. 统一 y_cols 为列表格式
+            if isinstance(y_cols, (int, str)):
+                y_cols = [df.columns[y_cols] if isinstance(y_cols, int) else y_cols]
+            elif isinstance(y_cols, list):
+                y_cols = [df.columns[c] if isinstance(c, int) else c for c in y_cols]
+
+            # 3. 获取并转换 X 轴
+            if dt_flag and hasattr(self, 'parse_to_datetime'):
+                df = self.parse_to_datetime(df, x_col)
+
+            x_data = df.iloc[:, x_col] if isinstance(x_col, int) else df[x_col]
+            if dt_flag or pd.api.types.is_datetime64_any_dtype(x_data):
+                x_data = pd.to_datetime(x_data)
+
+            # 记录范围，避免二次循环
+            all_x_min.append(x_data.min())
+            all_x_max.append(x_data.max())
+
+            # 4. 处理标签匹配
+            if lbls is None: lbls = y_cols
+            if isinstance(lbls, str): lbls = [lbls]
+
+            for col, label in zip(y_cols, lbls):
+                ax.plot(x_data, df[col], label=label)
+
+        # 5. 智能处理坐标轴刻度
+        is_any_datetime = any(isinstance(m, (pd.Timestamp, np.datetime64)) for m in all_x_min)
+        if is_any_datetime:
+            import matplotlib.dates as mdates
+            ax.xaxis.set_major_locator(mdates.AutoDateLocator(maxticks=axis_ticks[0]))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+            fig.autofmt_xdate()  # 自动旋转日期标记
+        else:
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=axis_ticks[0]))
+
+        ax.set_xlim(min(all_x_min), max(all_x_max))
+
+        # 美化线条
+        total_lines = sum([len(y) if isinstance(y, list) else 1 for y in y_columns_list])
+        self.line_style(ax, show_markers=show_markers, n_colors=total_lines)
+
+        plt.savefig(save_path, dpi=300)
+        print(f"[INFO] 多条折线图已保存: {save_path}")
+
+    def plot_bars(
+            self,
+            df: pd.DataFrame,
+            y_columns: Union[str, List[str], int, List[int]],
+            x_column: Union[str, int] = 0,
+            x_label: str = "X",
+            y_label: str = "Y",
+            bar_labels: Union[str, List[str]] = None,
+            title: str = "Bar Chart",
+            save_path: str = "bar_plot.png",
+            style: Optional[dict] = None,
+            rotate_xticks: Optional[Union[int, float]] = None,
+            annotate: bool = False,
+            number_format: str = "float",
+            precision: int = 2,
+            figure_size: [int, int] = None
     ):
         """
         绘制柱状图（支持单列 & 多列分组柱状图），并可在柱顶显示数值，支持浮点或科学计数法。

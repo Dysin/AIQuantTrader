@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 class AKShareData:
     def __init__(self):
         self.paths = PathManager()
-        self.path_macro = self.paths.get_data_macro_dir()
+        self.path_macro = self.paths.data_macro
 
     def str_to_kwargs(self, param):
         """
@@ -78,7 +78,7 @@ class AKShareData:
         - sleep_time: int/float，每次请求后的暂停时间（秒）
         """
         df_akshare = pd.read_csv(
-            self.paths.join_file_path(f'{file_name}.csv')
+            self.paths.join('files', f'{file_name}.csv')
         )
         if end_index is None:
             end_index = len(df_akshare)
@@ -105,7 +105,7 @@ class AKShareData:
 
     def macro(self, start_index=0, end_index=None):
         file_name = 'download_akshare_macro_info'
-        save_path = self.paths.get_data_macro_dir()
+        save_path = self.paths.data_macro
         self.download(
             file_name,
             save_path,
@@ -121,7 +121,7 @@ class AKShareData:
         :return:
         '''
         file_name = 'download_akshare_stock_info'
-        save_path = self.paths.get_data_stock_dir()
+        save_path = self.paths.data_stock
         self.download(
             file_name,
             save_path,

@@ -43,6 +43,12 @@ class APIKeys:
     alpaca_key = 'PK3L5CG6JYMYFZOJ5KWQPZNXU4'
     alpaca_secret = '3SNhMoVubh8yvJaJK4cJc52j8DbmYty2S8Reooc3XCZf'
 
+    '''
+    Alpha Vantage
+    Alpha Vantage 是一家总部位于美国波士顿的金融科技公司，提供可通过云端访问的金融市场数据 API。公司以“让金融数据民主化”为使命，为个人投资者、开发者和研究人员提供涵盖全球多资产类别的实时与历史数据服务。
+    '''
+    alpha_vantage = 'XYDLHMIHMQVB68L5'
+
 
 # ---------- 数据库配置 ----------
 MYSQL_CONFIG = {
