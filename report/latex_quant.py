@@ -44,11 +44,12 @@ class LatexQuant(ReportBase):
         self.latex.code += (
             f"\\subsection{{{stock_info['code']}技术指标分析}}\n"
         )
-        self.latex.code += (
-            "趋势类指标如图\\ref{fig: trend}所示，包含K-Line、MA、成交量、布林带。\n"
-        )
+
         period = 180
         image_size = 14
+        self.latex.code += (
+            "趋势类指标如图\\ref{fig: trend}所示，包含K-Line、MA、成交量。\n"
+        )
         self.latex.insert_figure(
             name=(
                 f"technical_indicators_trend_{stock_info['code']}_{period}days"
@@ -56,6 +57,17 @@ class LatexQuant(ReportBase):
             title="Trend Indicators",
             tag="trend",
             image_height=None,
+            image_width=image_size
+        )
+        self.latex.code += (
+            "布林带指标分析如图\\ref{fig: bollinger}所示。\n"
+        )
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_bollinger_{stock_info['code']}_{period}days"
+            ),
+            title="Bollinger Indicators",
+            tag="bollinger",
             image_width=image_size
         )
         self.latex.code += (
@@ -81,7 +93,7 @@ class LatexQuant(ReportBase):
             image_width=image_size
         )
         self.latex.code += (
-            "动量指标分析如图\\ref{fig: oscillator}所示，包含K-Line、KDJ、CCI。\n"
+            "震荡指标分析如图\\ref{fig: oscillator}所示，包含K-Line、KDJ、CCI。\n"
         )
         self.latex.insert_figure(
             name=(
@@ -92,7 +104,7 @@ class LatexQuant(ReportBase):
             image_width=image_size
         )
         self.latex.code += (
-            "动量指标分析如图\\ref{fig: volume}所示，包含K-Line、OBV。\n"
+            "成交量指标分析如图\\ref{fig: volume}所示，包含K-Line、OBV。\n"
         )
         self.latex.insert_figure(
             name=(

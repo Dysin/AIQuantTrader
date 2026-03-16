@@ -76,6 +76,7 @@ class FeatureEngineer(DataUtils):
 
     def plot_features(self, name: str=None, period: int=90):
         self.plot_trend_indicators(name, period)
+        self.plot_bollinger_indicators(name, period)
         self.plot_momentum_indicators(name, period)
         self.plot_volatility_indicators(name, period)
         self.plot_oscillator_indicators(name, period)
@@ -193,45 +194,13 @@ class FeatureEngineer(DataUtils):
                 markersize=20,
                 color='black'
             ),
-
-            # Bollinger Bands
-            # mpf.make_addplot(
-            #     df_plot['vwap'],
-            #     panel=2,
-            #     color='orange',
-            #     width=1,
-            #     label="VWAP"
-            # ),
-            mpf.make_addplot(
-                df_plot['bb_middle'],
-                panel=2,
-                color='black',
-                width=1.2,
-                label="BB Middle"
-            ),
-            mpf.make_addplot(
-                df_plot['bb_upper'],
-                panel=2,
-                color='red',
-                linestyle='dashed',
-                width=0.8,
-                label="BB Upper"
-            ),
-            mpf.make_addplot(
-                df_plot['bb_lower'],
-                panel=2,
-                color='green',
-                linestyle='dashed',
-                width=0.8,
-                label="BB Lower"
-            ),
         ]
 
         fig, axlist = self.plot_style(
             df=df_plot,
             name=name,
             addplot=apds,
-            panel_ratios=(6, 2, 3),
+            panel_ratios=(6, 2),
         )
 
         # K线层 (Panel 0)
@@ -258,6 +227,86 @@ class FeatureEngineer(DataUtils):
             fontsize=10,
             ncol=1
         )
+
+        # 成交量层 (Panel 1)
+        # axlist[1].legend(['Volume'], loc='upper left', frameon=False, fontsize=10)
+
+        # 6. 保存并释放
+        fig.savefig(path_img, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+
+    def plot_bollinger_indicators(self, name: str=None, period: int=90):
+        """
+        趋势指标
+        :param name: 股票名
+        :param period: 观察周期
+        :return:
+        """
+        path_img = os.path.join(
+            self.pm.images,
+            "stock",
+            f"technical_indicators_bollinger_{name}_{period}days.png"
+        )
+        df_plot = self.df.tail(period).copy()
+        # 2. 配置 Addplots (确保 secondary_y=False)
+        apds = [
+            # Panel 0:
+            mpf.make_addplot(
+                df_plot['bb_middle'],
+                panel=0,
+                color='black',
+                width=1.2,
+                label="BB Middle"
+            ),
+            mpf.make_addplot(
+                df_plot['bb_upper'],
+                panel=0,
+                color='red',
+                linestyle='dashed',
+                width=0.8,
+                label="BB Upper"
+            ),
+            mpf.make_addplot(
+                df_plot['bb_lower'],
+                panel=0,
+                color='green',
+                linestyle='dashed',
+                width=0.8,
+                label="BB Lower"
+            ),
+        ]
+
+        fig, axlist = self.plot_style(
+            df=df_plot,
+            name=name,
+            addplot=apds,
+            panel_ratios=(6, 2),
+        )
+
+        # # K线层 (Panel 0)
+        # lines_main = axlist[0].get_lines()
+        # # MA
+        # line_ma5 = lines_main[0]  # 假设是 MA5
+        # line_ma10 = lines_main[1]
+        # line_ma20 = lines_main[2]
+        #
+        # # SAR scatter 手动创建 legend
+        # sar_handle = mlines.Line2D(
+        #     [],
+        #     [],
+        #     color='black',
+        #     marker='.',
+        #     linestyle='None',
+        #     markersize=6
+        # )
+        # axlist[0].legend(
+        #     [line_ma5, line_ma10, line_ma20, sar_handle],  # MA + SAR
+        #     ['MA5', 'MA10', 'MA20', 'SAR'],
+        #     loc='upper left',
+        #     frameon=False,
+        #     fontsize=10,
+        #     ncol=1
+        # )
 
         # 成交量层 (Panel 1)
         # axlist[1].legend(['Volume'], loc='upper left', frameon=False, fontsize=10)
