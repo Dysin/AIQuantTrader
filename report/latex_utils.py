@@ -78,12 +78,19 @@ class LatexUtils:
             name,
             title,
             tag,
-            image_height=3
+            image_height=3,
+            image_width=None
     ):
+        if image_width is None:
+            image_size_name = "height"
+            image_size = image_height
+        else:
+            image_size_name = "width"
+            image_size = image_width
         self.code += (
             '\\begin{figure}[H]\n'
             '\t\\centering\n'
-            f'\t\\includegraphics[height={image_height}cm]{{{name}.png}} %图片文件名\n'
+            f'\t\\includegraphics[{image_size_name}={image_size}cm]{{{name}.png}} %图片文件名\n'
             f'\t\\caption{{{title}}}\n'
             f'\t\\label{{fig: {tag}}}\n'
             '\\end{figure}\n\n'

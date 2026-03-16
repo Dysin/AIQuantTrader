@@ -19,7 +19,92 @@ class LatexQuant(ReportBase):
             report_filename
         )
 
-    def analysis(self, date_start, engine, metrics):
+    def macro_analysis(self):
+        """
+        宏观分析
+        :return:
+        """
+        self.latex.code += (
+            f"\\section{{宏观分析}}\n"
+        )
+
+    def stock_tech_indicators(self, stock_info):
+        """
+        股票技术指标分析
+        :param stock_info:
+            {
+                code: 股票代码
+                name: 股票名
+            }
+        :return:
+        """
+        self.latex.code += (
+            f"\\section{{股票分析}}\n"
+        )
+        self.latex.code += (
+            f"\\subsection{{{stock_info['code']}技术指标分析}}\n"
+        )
+        self.latex.code += (
+            "趋势类指标如图\\ref{fig: trend}所示，包含K-Line、MA、成交量、布林带。\n"
+        )
+        period = 180
+        image_size = 14
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_trend_{stock_info['code']}_{period}days"
+            ),
+            title="Trend Indicators",
+            tag="trend",
+            image_height=None,
+            image_width=image_size
+        )
+        self.latex.code += (
+            "动量指标分析如图\\ref{fig: momentum}所示，包含K-Line、RSI、MACD。\n"
+        )
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_momentum_{stock_info['code']}_{period}days"
+            ),
+            title="Momentum Indicators",
+            tag="momentum",
+            image_width=image_size
+        )
+        self.latex.code += (
+            "波动率指标分析如图\\ref{fig: volatility}所示，包含K-Line、ATR。\n"
+        )
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_volatility_{stock_info['code']}_{period}days"
+            ),
+            title="Volatility Indicators",
+            tag="volatility",
+            image_width=image_size
+        )
+        self.latex.code += (
+            "动量指标分析如图\\ref{fig: oscillator}所示，包含K-Line、KDJ、CCI。\n"
+        )
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_oscillator_{stock_info['code']}_{period}days"
+            ),
+            title="Oscillator Indicators",
+            tag="oscillator",
+            image_width=image_size
+        )
+        self.latex.code += (
+            "动量指标分析如图\\ref{fig: volume}所示，包含K-Line、OBV。\n"
+        )
+        self.latex.insert_figure(
+            name=(
+                f"technical_indicators_volume_{stock_info['code']}_{period}days"
+            ),
+            title="Volume Indicators",
+            tag="volume",
+            image_width=image_size
+        )
+        
+
+    def report(self, date_start, engine, metrics):
         self.latex.first_page(
             main_title=self.title,
             sub_title='股票'
@@ -96,6 +181,12 @@ class LatexQuant(ReportBase):
             tag="cumulative_return",
             image_height=6
         )
+
+        # 股票技术指标分析
+        stock_info = {
+            "code": "AAPL"
+        }
+        self.stock_tech_indicators(stock_info)
 
         self.latex.save_and_compile()
 
