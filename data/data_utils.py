@@ -136,7 +136,7 @@ class DataUtils:
     def standardize_ohlcv(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         自动识别并标准化 OHLCV 列名为：
-        date, high, low, open, close, volume
+        date, open, high, low, close, volume
         """
         df = df.copy()
         # 1. 统一列名小写
@@ -163,9 +163,9 @@ class DataUtils:
 
         # 3. 映射 OHLCV
         col_map = {
+            "open": ["open", "o"],
             "high": ["high", "h"],
             "low": ["low", "l"],
-            "open": ["open", "o"],
             "close": ["close", "c", "adj close", "adj_close"],
             "volume": ["volume", "vol", "v"]
         }
@@ -178,7 +178,7 @@ class DataUtils:
         df.rename(columns=new_columns, inplace=True)
 
         # 4. 保留标准列（存在的）
-        cols_order = ["date", "high", "low", "open", "close", "volume"]
+        cols_order = ["date", "open", "high", "low", "close", "volume"]
         cols_exist = [c for c in cols_order if c in df.columns]
         df = df[cols_exist]
 

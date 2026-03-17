@@ -5,7 +5,7 @@
 '''
 
 import os
-# import pandas_datareader.data as web
+import pandas_datareader.data as web
 from data.data_utils import DataUtils
 from utils.logger import get_logger
 import yfinance as yf
@@ -35,7 +35,9 @@ class StockData(DataUtils):
             self.path_dact_stock,
             f"us_stock_daily_{name}.csv"
         )
-        df.to_csv(path_csv)
+        df = self.flatten_columns(df)
+        df = self.standardize_ohlcv(df)
+        df.to_csv(path_csv, index=False)
         self.update(
             self.path_dact_stock,
             self.path_darc_stock,
@@ -44,7 +46,7 @@ class StockData(DataUtils):
         logger.info(f"Download stock data successfully")
 
     def download_yfinance(self, name):
-        df = yf.download(name, start='2000-01-01', end='2026-01-01')
+        df = yf.download(name, start='2000-01-01')
         path_csv = os.path.join(
             self.path_dact_stock,
             f"us_stock_daily_{name}.csv"
@@ -61,5 +63,5 @@ class StockData(DataUtils):
 
 if __name__ == "__main__":
     stock_data = StockData()
-    # stock_data.download_daily("AAPL")
-    stock_data.download_yfinance("AAPL")
+    stock_data.download_daily("AMZN")
+    # stock_data.download_yfinance("AAPL")

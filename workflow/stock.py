@@ -32,11 +32,11 @@ class WorkflowStock:
         )
         self.data_processing = DataProcessing(self.path_backtest)
 
-    def test(self):
+    def test(self, name):
         csv_stock = os.path.join(
             self.pm.data_archived,
             "stock",
-            'us_stock_daily_AAPL.csv'
+            f'us_stock_daily_{name}.csv'
         )
         df = pd.read_csv(csv_stock, parse_dates=["date"], index_col="date")
         df_slice = df.loc["2016-03-01":"2025-10-30"]
@@ -55,7 +55,7 @@ class WorkflowStock:
 
         features = FeatureEngineer(df_slice)
         features.generate_features()
-        features.plot_features("AAPL", 180)
+        features.plot_features(name, 500)
 
         image_names = [
             'trades_price',

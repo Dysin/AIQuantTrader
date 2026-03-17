@@ -30,4 +30,4 @@ if __name__ == '__main__':
     # print('================')
 
 
-    WorkflowStock().test()
+    WorkflowStock().test("AMZN")

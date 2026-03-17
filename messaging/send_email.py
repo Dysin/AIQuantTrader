@@ -5,6 +5,7 @@
 '''
 
 import smtplib
+import mimetypes
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -32,13 +33,19 @@ def send_email_with_attachment(
 
     # 2. 添加附件
     if attachment_path and os.path.isfile(attachment_path):
+        ctype, encoding = mimetypes.guess_type(attachment_path)
+        if ctype is None or encoding is not None:
+            ctype = 'application/octet-stream'
+        maintype, subtype = ctype.split('/', 1)
         with open(attachment_path, 'rb') as f:
-            part = MIMEBase('application', 'octet-stream')
+            part = MIMEBase(maintype, subtype)
             part.set_payload(f.read())
         encoders.encode_base64(part)
+        filename = os.path.basename(attachment_path)
         part.add_header(
             'Content-Disposition',
-            f'attachment; filename={os.path.basename(attachment_path)}'
+            'attachment',
+            filename=('utf-8', '', filename)
         )
         msg.attach(part)
 
@@ -63,5 +70,5 @@ if __name__ == "__main__":
         receiver_email='dysinqiu@163.com',
         subject='测试邮件',
         body='这是测试邮件正文',
-        attachment_path=r'D:\2_Special\active\ai_agent\reports\quantitative_trading_20260317\20260317_量化交易分析报告.pdf'
+        attachment_path=r'F:\2_Special\active\investment_system\reports\quantitative_trading_20260316\20260316_量化交易分析报告.pdf'
     )
