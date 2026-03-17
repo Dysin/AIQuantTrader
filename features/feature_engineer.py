@@ -252,19 +252,19 @@ class FeatureEngineer(DataUtils):
         apds = [
             # Panel 0:
             mpf.make_addplot(
-                df_plot['bb_middle'],
-                panel=0,
-                color='black',
-                width=1.2,
-                label="BB Middle"
-            ),
-            mpf.make_addplot(
                 df_plot['bb_upper'],
                 panel=0,
                 color='red',
                 linestyle='dashed',
                 width=0.8,
-                label="BB Upper"
+                label="Bollinger Band Upper"
+            ),
+            mpf.make_addplot(
+                df_plot['bb_middle'],
+                panel=0,
+                color='black',
+                width=1.2,
+                label="Bollinger Band Middle"
             ),
             mpf.make_addplot(
                 df_plot['bb_lower'],
@@ -272,7 +272,7 @@ class FeatureEngineer(DataUtils):
                 color='green',
                 linestyle='dashed',
                 width=0.8,
-                label="BB Lower"
+                label="Bollinger Band Lower"
             ),
         ]
 
@@ -282,34 +282,6 @@ class FeatureEngineer(DataUtils):
             addplot=apds,
             panel_ratios=(6, 2),
         )
-
-        # # K线层 (Panel 0)
-        # lines_main = axlist[0].get_lines()
-        # # MA
-        # line_ma5 = lines_main[0]  # 假设是 MA5
-        # line_ma10 = lines_main[1]
-        # line_ma20 = lines_main[2]
-        #
-        # # SAR scatter 手动创建 legend
-        # sar_handle = mlines.Line2D(
-        #     [],
-        #     [],
-        #     color='black',
-        #     marker='.',
-        #     linestyle='None',
-        #     markersize=6
-        # )
-        # axlist[0].legend(
-        #     [line_ma5, line_ma10, line_ma20, sar_handle],  # MA + SAR
-        #     ['MA5', 'MA10', 'MA20', 'SAR'],
-        #     loc='upper left',
-        #     frameon=False,
-        #     fontsize=10,
-        #     ncol=1
-        # )
-
-        # 成交量层 (Panel 1)
-        # axlist[1].legend(['Volume'], loc='upper left', frameon=False, fontsize=10)
 
         # 6. 保存并释放
         fig.savefig(path_img, dpi=300, bbox_inches="tight")

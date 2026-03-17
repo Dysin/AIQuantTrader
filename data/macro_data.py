@@ -69,7 +69,7 @@ class MacroDataFetcher:
         ts.set_token(APIKeys().tushare)
         self.pro = ts.pro_api()
         # 初始化数据管理器
-        self.db = DBManager()
+        # self.db = DBManager()
 
     @staticmethod
     def _ensure_dir(path: str):

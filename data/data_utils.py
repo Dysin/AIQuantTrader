@@ -122,6 +122,71 @@ class DataUtils:
                 csv
             )
 
+    def flatten_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        处理 MultiIndex 列（如 yfinance 多股票格式）
+        """
+        if isinstance(df.columns, pd.MultiIndex):
+            # 方法1：只取第一层（最常用）
+            df.columns = [col[0] for col in df.columns]
+            # 方法2（可选）：拼接列名（适合多股票）
+            # df.columns = ['_'.join(col).strip() for col in df.columns]
+        return df
+
+    def standardize_ohlcv(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        自动识别并标准化 OHLCV 列名为：
+        date, high, low, open, close, volume
+        """
+        df = df.copy()
+        # 1. 统一列名小写
+        df.columns = [str(c).lower().strip() for c in df.columns]
+        # 2. 处理日期列
+        if df.index.name is not None:
+            idx_name = df.index.name.lower()
+        else:
+            idx_name = ""
+        # 情况1：日期在 index
+        if "date" in idx_name or "time" in idx_name:
+            df = df.reset_index()
+            df.rename(columns={df.columns[0]: "date"}, inplace=True)
+        # 情况2：日期在列中（各种可能命名）
+        else:
+            date_candidates = ["date", "datetime", "time", "timestamp"]
+            for col in df.columns:
+                if col in date_candidates:
+                    df.rename(columns={col: "date"}, inplace=True)
+                    break
+            else:
+                # 如果没有找到，默认第一列是时间
+                df.rename(columns={df.columns[0]: "date"}, inplace=True)
+
+        # 3. 映射 OHLCV
+        col_map = {
+            "high": ["high", "h"],
+            "low": ["low", "l"],
+            "open": ["open", "o"],
+            "close": ["close", "c", "adj close", "adj_close"],
+            "volume": ["volume", "vol", "v"]
+        }
+        new_columns = {}
+        for std_col, candidates in col_map.items():
+            for c in df.columns:
+                if c in candidates:
+                    new_columns[c] = std_col
+                    break
+        df.rename(columns=new_columns, inplace=True)
+
+        # 4. 保留标准列（存在的）
+        cols_order = ["date", "high", "low", "open", "close", "volume"]
+        cols_exist = [c for c in cols_order if c in df.columns]
+        df = df[cols_exist]
+
+        # 5. 转换日期类型 + 排序
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date").reset_index(drop=True)
+        return df
+
 if __name__ == "__main__":
     data_utils = DataUtils()
     data_utils.update_all()
