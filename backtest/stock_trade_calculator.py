@@ -9,7 +9,6 @@ from datetime import datetime
 class StockTradeCalculator:
     """
     股票单笔交易收益计算器
-
     用于计算在给定买入时间、卖出时间和股票数量的情况下，
     考虑买卖手续费、印花税、资金利息后的实际收益、收益率和年化收益。
     """
@@ -45,7 +44,6 @@ class StockTradeCalculator:
     def _calc_fee(self, amount, rate):
         """
         计算手续费，考虑最小手续费限制
-
         :param amount: 成交金额
         :param rate: 手续费比例
         :return: 手续费金额
@@ -55,7 +53,6 @@ class StockTradeCalculator:
     def _days_between(self, start, end):
         """
         计算两个日期之间的天数差
-
         :param start: 起始日期 datetime
         :param end: 结束日期 datetime
         :return: 天数整数
@@ -73,13 +70,11 @@ class StockTradeCalculator:
     ):
         """
         给定买入时间 & 卖出时间，计算完整交易结果
-
         :param buy_time: 买入时间
         :param sell_time: 卖出时间
         :param shares: 买入数量（股数）
         :return: dict, 包含买卖价格、手续费、印花税、利息、净收益、收益率、年化收益等
         """
-
         # 获取买入价格（收盘价）
         buy_price = self.df.loc[buy_time, "close"]
         # 获取卖出价格（收盘价）
